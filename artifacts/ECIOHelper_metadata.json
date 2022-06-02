@@ -1,0 +1,65 @@
+{
+	"compiler": {
+		"version": "0.8.7+commit.e28d00a7"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "partCode",
+						"type": "string"
+					}
+				],
+				"name": "splitPartCode",
+				"outputs": [
+					{
+						"internalType": "string[]",
+						"name": "",
+						"type": "string[]"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"Helper.sol": "ECIOHelper"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"Helper.sol": {
+			"keccak256": "0x14ba40abf430ef8cd329875163a699df97543688e5fc96763b2ee173fe1701ba",
+			"license": "Unlicense",
+			"urls": [
+				"bzz-raw://720910bbfa8038abf3d6e2fd34ed03ec85901a78d42f1cdb0258fc4cb43a1cb9",
+				"dweb:/ipfs/QmVitsLaj3N2dBaTeq52k9CY7AKSgrC2s6oLduTSiYkp7J"
+			]
+		}
+	},
+	"version": 1
+}
