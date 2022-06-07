@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./CreatePartcode.sol";
 import "./Helper.sol";
 
 interface ECIOERC721 {
@@ -14,9 +15,6 @@ interface ECIOERC721 {
     function safeMint(address to, string memory partCode) external;
 }
 
-interface RANDOM_CONTRACT {
-    function startRandom() external returns (uint256);
-}
 
 interface RANDOM_RATE {
     function getRNGPool(uint16 _part, uint16 _number)
@@ -25,31 +23,13 @@ interface RANDOM_RATE {
         returns (uint16);
 }
 
-contract BioLab is Ownable, ECIOHelper {
+contract BioLab is Ownable, ECIOHelper,RandomPartcode {
     struct Info {
         string partCode;
         uint256 createAt;
     }
-
-    // Part Code Index
-    uint256 constant PC_NFT_TYPE = 12;
-    uint256 constant PC_KINGDOM = 11;
-    uint256 constant PC_CAMP = 10;
-    uint256 constant PC_GEAR = 9;
-    uint256 constant PC_DRONE = 8;
-    uint256 constant PC_SUITE = 7;
-    uint256 constant PC_BOT = 6;
-    uint256 constant PC_GENOME = 5;
-    uint256 constant PC_WEAPON = 4;
-    uint256 constant PC_STAR = 3;
-    uint256 constant PC_EQUIPMENT = 2;
-    uint256 constant PC_RESERVED1 = 1;
-    uint256 constant PC_RESERVED2 = 0;
-
-    address public nftCoreContract;
     address public ecioTokenContract;
     address public lakrimaTokenContract;
-    address public randomWorkerContract;
     address public randomRateContract;
 
     uint16 public ratePerFragment;
@@ -146,7 +126,7 @@ contract BioLab is Ownable, ECIOHelper {
                 );
                 uint16 rate = uint16(tokenIds.length) * ratePerFragment;
                 if (rate >= 100) {     
-                    string memory newWarriorPartCode =createPartCode(firstPartCode);
+                    string memory newWarriorPartCode =createNFTCode();
                     ECIOERC721(nftCoreContract).safeMint(
                         msg.sender,
                         newWarriorPartCode
@@ -160,7 +140,7 @@ contract BioLab is Ownable, ECIOHelper {
                         .getRNGPool(5, getNumberAndMod(randomNumber, 5, 1000));
                     if (rate > randomResult) {
                         // partCodeCheck
-                    string memory newWarriorPartCode =createPartCode(firstPartCode);
+                    string memory newWarriorPartCode =createNFTCode();
                     ECIOERC721(nftCoreContract).safeMint(
                         msg.sender,
                         newWarriorPartCode
@@ -181,15 +161,6 @@ contract BioLab is Ownable, ECIOHelper {
             .tokenInfo(tokenId);
         return tokenInfo.partCode;
     }
-
-    
-
-    function createPartCode(
-        string memory gencode
-    ) internal pure returns (string memory) {
-
-    }
-
     function transferFee(
         address _contractAddress,
         address _to,
@@ -199,46 +170,5 @@ contract BioLab is Ownable, ECIOHelper {
         _token.transfer(_to, _amount);
     }
 
-    function getNumberAndMod(
-        uint256 _ranNum,
-        uint16 digit,
-        uint16 mod
-    ) public view virtual returns (uint16) {
-        if (digit == 1) {
-            return uint16((_ranNum % 10000) % mod);
-        } else if (digit == 2) {
-            return uint16(((_ranNum % 100000000) / 10000) % mod);
-        } else if (digit == 3) {
-            return uint16(((_ranNum % 1000000000000) / 100000000) % mod);
-        } else if (digit == 4) {
-            return
-                uint16(((_ranNum % 10000000000000000) / 1000000000000) % mod);
-        } else if (digit == 5) {
-            return
-                uint16(
-                    ((_ranNum % 100000000000000000000) / 10000000000000000) %
-                        mod
-                );
-        } else if (digit == 6) {
-            return
-                uint16(
-                    ((_ranNum % 1000000000000000000000000) /
-                        100000000000000000000) % mod
-                );
-        } else if (digit == 7) {
-            return
-                uint16(
-                    ((_ranNum % 10000000000000000000000000000) /
-                        1000000000000000000000000) % mod
-                );
-        } else if (digit == 8) {
-            return
-                uint16(
-                    ((_ranNum % 100000000000000000000000000000000) /
-                        10000000000000000000000000000) % mod
-                );
-        }
-
-        return 0;
-    }
+   
 }
