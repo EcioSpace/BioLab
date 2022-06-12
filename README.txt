@@ -73,8 +73,6 @@ You can interact with the smart contract with these buttons.
 
 
 
-
-
 	
 
 
