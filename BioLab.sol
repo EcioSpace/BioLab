@@ -15,12 +15,8 @@ interface ECIOERC721 {
     function safeMint(address to, string memory partCode) external;
 }
 
-
-interface RANDOM_RATE {
-    function getRNGPool(uint16 _part, uint16 _number)
-        external
-        view
-        returns (uint16);
+interface RANDOM_CONTRACT {
+    function startRandom() external returns (uint256);
 }
 
 contract BioLab is Ownable, ECIOHelper,RandomPartcode {
@@ -28,9 +24,10 @@ contract BioLab is Ownable, ECIOHelper,RandomPartcode {
         string partCode;
         uint256 createAt;
     }
+    address public nftCoreContract;
     address public ecioTokenContract;
     address public lakrimaTokenContract;
-    address public randomRateContract;
+    address public randomWorkerContract;
 
     uint16 public ratePerFragment;
 
@@ -58,9 +55,7 @@ contract BioLab is Ownable, ECIOHelper,RandomPartcode {
         randomWorkerContract = _address;
     }
 
-    function updateRandomRateContract(address _address) public onlyOwner {
-        randomRateContract = _address;
-    }
+
 
     function updateLakrimaPrice(uint256 price) public onlyOwner {
         lakrimaPrice = price;
@@ -75,7 +70,7 @@ contract BioLab is Ownable, ECIOHelper,RandomPartcode {
     }
 
     
-    function battleLabsSuiteForge(
+    function bioLabMerge(
         uint256[] memory tokenIds
     ) public returns (bool success) {
         
@@ -125,22 +120,27 @@ contract BioLab is Ownable, ECIOHelper,RandomPartcode {
                     lakrimaPrice * tokenIds.length
                 );
                 uint16 rate = uint16(tokenIds.length) * ratePerFragment;
+                randomNumber=RANDOM_CONTRACT(randomWorkerContract)
+                        .startRandom();
+                string memory genPart=getGeneticInfo(firstPartCode);
+                uint8 rarity=getRarityInfo(genPart);
+                
                 if (rate >= 100) {     
-                    string memory newWarriorPartCode =createNFTCode();
+                    string memory newWarriorPartCode =createPartCode(randomNumber,rarity);
                     ECIOERC721(nftCoreContract).safeMint(
                         msg.sender,
                         newWarriorPartCode
                     );
                     return true;
                 } else {
-                    randomNumber = RANDOM_CONTRACT(randomWorkerContract)
+                    uint256 randomSuccessNumber = RANDOM_CONTRACT(randomWorkerContract)
                         .startRandom();
-                    // uint16 randomNumberForNFTType = getNumberAndMod(randomNumber, 5, 1000);
-                    uint16 randomResult = RANDOM_RATE(randomRateContract)
-                        .getRNGPool(5, getNumberAndMod(randomNumber, 5, 1000));
+                    
+
+                    uint16 randomResult = getNumberAndMod(randomSuccessNumber, 5, 100);
                     if (rate > randomResult) {
                         // partCodeCheck
-                    string memory newWarriorPartCode =createNFTCode();
+                    string memory newWarriorPartCode =createPartCode(randomNumber,rarity);
                     ECIOERC721(nftCoreContract).safeMint(
                         msg.sender,
                         newWarriorPartCode
@@ -154,8 +154,39 @@ contract BioLab is Ownable, ECIOHelper,RandomPartcode {
         }
     }
 
+    function compareStrings(string memory a, string memory b)
+        public
+        pure
+        returns (bool)
+    {
+        return (keccak256(abi.encodePacked((a))) ==
+            keccak256(abi.encodePacked((b))));
+    }
 
-    function getPartInfo(uint256 tokenId) private view returns (string memory) {
+
+    function getRarityInfo(string memory genInfo)public pure returns (uint8){
+        if(compareStrings(genInfo,"00") || compareStrings(genInfo,"01") ||compareStrings(genInfo,"02") || compareStrings(genInfo,"03") ||compareStrings(genInfo,"04") ||compareStrings(genInfo,"05")||compareStrings(genInfo,"06"))
+            return 0;
+        else if(compareStrings(genInfo,"07")||compareStrings(genInfo,"08")||compareStrings(genInfo,"09")||compareStrings(genInfo,"10")||compareStrings(genInfo,"11")||compareStrings(genInfo,"12"))
+            return 1;
+        else if(compareStrings(genInfo,"13")|| compareStrings(genInfo,"14")||compareStrings(genInfo,"15")||compareStrings(genInfo,"16"))
+            return 2;
+        else if(compareStrings(genInfo,"17")|| compareStrings(genInfo,"18")||compareStrings(genInfo,"19"))
+            return 3;
+        else return 4;
+    }
+
+    function getGeneticInfo(string memory partCode)public view returns(string memory){
+            string memory geneticInfo=string(
+                abi.encodePacked(
+                    bytes(partCode)[10],
+                    bytes(partCode)[11]
+                )
+            );
+            return geneticInfo;
+    }
+
+    function getPartInfo(uint256 tokenId)public view returns (string memory) {
         Info memory tokenInfo;
         (tokenInfo.partCode, tokenInfo.createAt) = ECIOERC721(nftCoreContract)
             .tokenInfo(tokenId);

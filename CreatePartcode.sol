@@ -1,43 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-
-
-interface ERC721_CONTRACT {
-    function safeMint(address to, string memory partCode) external;
-}
-
-interface RANDOM_CONTRACT {
-    function startRandom() external returns (uint256);
-}
-
-interface RANDOM_PARTRATE {
-    function getGenPool(
-        uint16 _rarity,
-        uint16 _number
-    ) external view returns (uint16);
-
-    function getNFTPool(uint16 _number)
-        external
-        view
-        returns (uint16);
-
-    function getEquipmentPool(uint16 _number) external view returns (uint16);
-
-    function getBlueprintPool(
-        uint16 _rarity,
-        uint16 eTypeId,
-        uint16 _number
-    ) external view returns (uint16);
-
-    function getSpaceWarriorPool(
-        uint16 _part,
-        uint16 _number
-    ) external view returns (uint16);
-}
 
 contract RandomPartcode is Ownable {
     using Strings for string;
@@ -46,55 +11,57 @@ contract RandomPartcode is Ownable {
     uint8 private constant SUITE = 5; //Battle Suit
     uint8 private constant WEAP = 8; //WEAP
     uint8 private constant SPACE_WARRIOR = 6;
-    uint8 private constant GEN = 7; //Human GEN
+
 
     uint8 private constant COMMON = 0;
     uint8 private constant RARE = 1;
     uint8 private constant EPIC = 2;
-    uint8 private constant SPACIAL = 3;
+    uint8 private constant LEGENDARY = 3;
+    uint8 private constant LIMITED=4;
 
-    address public nftCoreContract;
-    address public randomWorkerContract;
-    enum randomRateType{
-        STD
-    }
-    mapping(randomRateType => address) public randomRateAddress;     
-
-    constructor() {}
-
-    function changeRandomWorkerContract(address _address) public onlyOwner {
-        randomWorkerContract = _address;
-    }
-
-    function changeNftCoreContract(address _address) public onlyOwner {
-        nftCoreContract = _address;
-    }
-
-    //Change RandomRate type Contract
-
-    function changeRandomRateSTD(address _address) public onlyOwner {
-        randomRateAddress[randomRateType.STD] = _address;
-    }
+    // mapping(uint8=>mapping(uint8=>uint8)) public Weapon;
+    uint8 [][4] public Weapon;
+    uint8 [][4] public Battle_Bot;
+    uint8 [][4] public Battle_Suite;
+    uint8 [][4] public Battle_Drone;
+    uint8 [][4] public Battle_Gear;
+    uint8 [5] public Training_Camp;
 
 
-    function createNFTCode()
-        internal
+    constructor() {
+        Weapon[COMMON]=[0,1,2,3];
+        Weapon[RARE]=[4,5,6,7,8];
+        Weapon[EPIC]=[9,10,11,12,13,14];
+        Weapon[LEGENDARY]=[15,16,17,18,19];
+
+        Battle_Bot[COMMON]=[0,1,2,3,4];
+        Battle_Bot[RARE]=[0,5,6,7];
+        Battle_Bot[EPIC]=[0,8,9,10];
+        Battle_Bot[LEGENDARY]=[0,11,12];
+
+        Battle_Suite[COMMON]=[0,1,2];
+        Battle_Suite[RARE]=[3,4,5];
+        Battle_Suite[EPIC]=[6,7,8,9];
+        Battle_Suite[LEGENDARY]=[10,11];
+
+        Battle_Drone[COMMON]=[0,1,2,3,4];
+        Battle_Drone[RARE]=[0,5,6,7];
+        Battle_Drone[EPIC]=[0,8,9,10];
+        Battle_Drone[LEGENDARY]=[0,11,12];
+
+        Battle_Gear[COMMON]=[0,1,2,3,4];
+        Battle_Gear[RARE]=[0,5,6,7];
+        Battle_Gear[EPIC]=[0,8,9,10];
+        Battle_Gear[LEGENDARY]=[0,11,12];
+
+        Training_Camp=[0,1,2,3,4];
         
-        returns (string memory)
-    {
-        string memory partCode;
-         uint256 _randomNumber = RANDOM_CONTRACT(randomWorkerContract)
-          .startRandom();
-        //create SW
-        partCode = createSW(_randomNumber,randomRateType.STD);
-
-        return partCode;
     }
-
+ 
     function getNumberAndMod(
         uint256 _ranNum,
         uint16 digit,
-        uint16 mod
+        uint256 mod
     ) public view virtual returns (uint16) {
         if (digit == 1) {
             return uint16((_ranNum % 10000) % mod);
@@ -117,49 +84,45 @@ contract RandomPartcode is Ownable {
         return 0;
     }
 
+    function getPartId(uint256 _randomNumber,uint16 digit, uint8[] memory  partArray) public returns( uint8){
+        uint256 arrayLength=partArray.length;
+        uint256 index=getNumberAndMod(_randomNumber,digit,arrayLength);
+        return partArray[index];
+    }
 
-    function createSW(uint256 _randomNumber, randomRateType _RandomType)
-        private
-        view
+    function createPartCode(uint256 _randomNumber, uint8 rarity)
+        public
         returns (string memory)
-        {
-        
+        {    
+        uint8 weapon_Id=getPartId(_randomNumber,3,Weapon[rarity]);
+        uint8 bot_Id=getPartId(_randomNumber,4,Battle_Bot[rarity]);
+        uint8 suite_Id=getPartId(_randomNumber,5,Battle_Suite[rarity]);
+        uint8 drone_Id=getPartId(_randomNumber,6,Battle_Drone[rarity]);
+        uint8 gear_Id=getPartId(_randomNumber,7,Battle_Gear[rarity]);
+        // uint8 camp_Id=getPartId(_randomNumber,8,Training_Camp);
 
-        
-        // adjust digit to random partcode
-        uint16 battleSuiteId = getNumberAndMod(_randomNumber, 5, 1000);
-        uint16 humanGenomeId = getNumberAndMod(_randomNumber, 7, 1000);
-        uint16 weaponId = getNumberAndMod(_randomNumber, 8, 1000);
 
-        string memory concatedCode = convertCodeToStr(6);
-
+        // adjust digit to random partcode     
+        string memory concatedCode = "";
         concatedCode = concateCode(concatedCode, 0); //kingdomCode
         concatedCode = concateCode(concatedCode, 0);
         concatedCode = concateCode(concatedCode, 0);
         concatedCode = concateCode(concatedCode, 0);
-        concatedCode = concateCode(
-            concatedCode,
-            RANDOM_PARTRATE(randomRateAddress[_RandomType]).getSpaceWarriorPool(SUITE, battleSuiteId)
-        );
-        concatedCode = concateCode(concatedCode, 0);
-        concatedCode = concateCode(
-            concatedCode,
-            RANDOM_PARTRATE(randomRateAddress[_RandomType]).getSpaceWarriorPool(GEN, humanGenomeId)
-        );
-        concatedCode = concateCode(
-            concatedCode,
-            RANDOM_PARTRATE(randomRateAddress[_RandomType]).getSpaceWarriorPool(WEAP, weaponId)
-        );
-        concatedCode = concateCode(concatedCode, 0); //Star
-        concatedCode = concateCode(concatedCode, 0); //equipmentCode
+        concatedCode = concateCode(concatedCode,weapon_Id);
+        concatedCode = concateCode(concatedCode,rarity);
+        concatedCode = concateCode(concatedCode,bot_Id);
+        concatedCode = concateCode(concatedCode,suite_Id);
+        concatedCode = concateCode(concatedCode,drone_Id);
+        concatedCode = concateCode(concatedCode,gear_Id);
+        concatedCode = concateCode(concatedCode,0);  
         concatedCode = concateCode(concatedCode, 0); //Reserved
         concatedCode = concateCode(concatedCode, 0); //Reserved
         return concatedCode;
     }
 
 
-    function concateCode(string memory concatedCode, uint256 digit)
-        internal
+    function concateCode(string memory concatedCode, uint8 digit)
+        public
         pure
         returns (string memory)
     {
@@ -181,4 +144,4 @@ contract RandomPartcode is Ownable {
 
         return Strings.toString(code);
     }
-}
+ }
