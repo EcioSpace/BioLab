@@ -1,4 +1,5 @@
-
+Copyright © 2022 Redshift Game Studios Pte. Ltd.
+ All rights reserved.
   							 ____    _____   __  __   ___  __  __   ___   ____    _____ 
   							|  _ \  | ____| |  \/  | |_ _| \ \/ /  |_ _| |  _ \  | ____|
   							| |_) | |  _|   | |\/| |  | |   \  /    | |  | | | | |  _|  
